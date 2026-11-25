@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="Postur APBN Indonesia s.d. 31 Oktober 2026: pendapatan, belanja, defisit, penerimaan pajak per jenis, dan rasio pajak. Edisi publik Arsip Tahunan — data APBN KiTa Kemenkeu per 25 November 2026." />
+    <link rel="icon" href="data:," />
+    <title>APBN &amp; Penerimaan Pajak — Edisi Publik</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #edf2f5;
+        --surface: #ffffff;
+        --text: #16232b;
+        --dim: #5d7180;
+        --border: #d8e2e8;
+        --accent: #07754d;
+        --accent-dark: #076e49;
+        --accent-bright: #0a8a5c;
+        --accent-tint: #e3f2ec;
+        --chart2: #7fb8d8;
+        --chart2-dark: #40536b;
+        --danger: #b3382e;
+        --warn: #b97e10;
+        --track: #e3ecef;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0e1512;
+          --surface: #182019;
+          --text: #e8f0ec;
+          --dim: #93a89d;
+          --border: #2a3a31;
+          --accent: #2fbf8f;
+          --accent-dark: #2fbf8f;
+          --accent-bright: #35cf9c;
+          --accent-tint: #16352a;
+          --chart2: #5b93b8;
+          --chart2-dark: #8fa8c4;
+          --danger: #e0685f;
+          --warn: #d9a83f;
+          --track: #243129;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+      a { min-height: 2.25rem; }
+      .wrap { max-width: 1024px; margin: 0 auto; padding: 20px 16px 44px; }
+      @media (min-width: 640px) { .wrap { padding: 24px 20px 48px; } }
+
+      .kicker { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-dark); margin: 0; }
+      h1 { font-size: 24px; line-height: 1.25; margin: 6px 0 0; font-weight: 800; }
+      @media (min-width: 640px) { h1 { font-size: 30px; } }
+      .sub { margin-top: 6px; font-size: 14px; line-height: 1.55; color: var(--dim); }
+      .snapshot-note {
+        margin-top: 14px; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.55;
+        background: var(--accent-tint); border: 1px solid var(--border); color: var(--text);
+      }
+      .snapshot-note strong { color: var(--accent-dark); }
+
+      .card {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+        padding: 16px; box-shadow: 0 1px 3px rgba(22,35,43,.08);
+      }
+      section { margin-top: 28px; }
+      h2 { font-size: 18px; margin: 0; font-weight: 800; }
+      .meaning {
+        margin: 10px 0 0; border-left: 3px solid var(--accent-bright); padding-left: 12px;
+        font-size: 14px; line-height: 1.6; color: var(--dim);
+      }
+
+      /* Kartu postur */
+      .hero-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 16px; }
+      @media (min-width: 560px) { .hero-grid { grid-template-columns: 1fr 1fr; } }
+      @media (min-width: 1000px) { .hero-grid { grid-template-columns: repeat(4, 1fr); } }
+      .hero-label { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); margin: 0; }
+      .hero-value { margin: 6px 0 0; font-size: 27px; line-height: 1.15; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .hero-meta { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+      .pct-target { font-size: 14px; font-weight: 700; color: var(--accent-dark); }
+      .yoy { font-size: 14px; font-weight: 600; color: var(--accent-dark); }
+      .yoy.neg { color: var(--danger); }
+      .bar { margin-top: 12px; height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+      .bar > div { height: 100%; border-radius: 999px; background: var(--accent-bright); }
+      .bar > div.full { background: var(--accent-dark); }
+      .hero-target { margin: 8px 0 0; font-size: 12px; color: var(--dim); }
+
+      .strip {
+        margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px 24px;
+        font-size: 14px; line-height: 1.6;
+      }
+      .strip strong { font-variant-numeric: tabular-nums; }
+
+      /* Chart riwayat */
+      .chart-scroll { margin-top: 4px; }
+      #history-chart { display: block; width: 100%; height: auto; }
+      svg text { font-family: inherit; }
+      .grid-line { stroke: var(--border); stroke-width: 1; }
+      .axis-label { fill: var(--dim); font-size: 11px; }
+      .bar-rev { fill: var(--accent-bright); }
+      .bar-spend { fill: var(--chart2); }
+      .def-line { stroke: var(--danger); stroke-width: 2; fill: none; }
+      .def-dot { fill: var(--danger); }
+      .def-label { fill: var(--danger); font-size: 11px; font-weight: 700; }
+      .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--dim); margin-top: 8px; }
+      .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+      .legend .l-rev::before { background: var(--accent-bright); }
+      .legend .l-spend::before { background: var(--chart2); }
+      .legend .l-def::before { background: var(--danger); border-radius: 999px; height: 4px; vertical-align: 2px; }
+      .chart-note { margin: 8px 0 0; font-size: 12px; line-height: 1.55; color: var(--dim); }
+
+      /* Capaian per jenis pajak — batang horizontal */
+      .cap-row { display: grid; grid-template-columns: 128px 1fr 52px; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
+      .cap-row:last-child { border-bottom: none; }
+      @media (min-width: 640px) { .cap-row { grid-template-columns: 210px 1fr 60px; } }
+      .cap-name { font-size: 13px; font-weight: 600; line-height: 1.35; }
+      .cap-track { position: relative; height: 14px; border-radius: 4px; background: var(--track); }
+      .cap-fill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: var(--accent-bright); }
+      .cap-fill.full { background: var(--accent-dark); }
+      .cap-target-line { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--warn); }
+      .cap-val { font-size: 13px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; color: var(--accent-dark); }
+
+      .tax-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+      @media (min-width: 560px) { .tax-grid { grid-template-columns: 1fr 1fr; } }
+      @media (min-width: 1000px) { .tax-grid { grid-template-columns: repeat(3, 1fr); } }
+      .tax-value { margin: 6px 0 0; font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+      .duo { display: grid; grid-template-columns: 1fr; gap: 12px; }
+      @media (min-width: 900px) { .duo { grid-template-columns: 1fr 1fr; } }
+      .hl-line { font-size: 14px; line-height: 1.6; margin: 10px 0 0; }
+      .hl-line .tag { font-weight: 700; }
+      .hl-line .tag.good { color: var(--accent-dark); }
+      .hl-line .tag.low { color: var(--warn); }
+      .ratio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+      .ratio-value { margin: 4px 0 0; font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .ratio-sub { margin: 2px 0 0; font-size: 12px; color: var(--dim); line-height: 1.5; }
+
+      .sources { margin: 10px 0 0; padding: 0; list-style: none; }
+      .sources li { border-bottom: 1px solid var(--border); }
+      .sources li:last-child { border-bottom: none; }
+      .sources a {
+        display: flex; align-items: center; padding: 6px 0; font-size: 14px; font-weight: 600;
+        color: var(--accent-dark); text-decoration: underline; text-underline-offset: 3px;
+        text-decoration-color: var(--accent-bright);
+      }
+      .src-note { margin: 10px 0 0; font-size: 13px; line-height: 1.65; color: var(--dim); }
+
+      footer { margin-top: 28px; font-size: 12.5px; line-height: 1.65; color: var(--dim); }
+      footer a { color: var(--accent-dark); font-weight: 600; display: inline-flex; align-items: center; }
+      footer .disc { margin-top: 8px; font-weight: 600; color: var(--text); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <p class="kicker">APBN KiTa Edisi November 2026</p>
+      <h1>Postur APBN s.d. 31 Oktober 2026</h1>
+      <p class="sub">
+        Pendapatan, belanja, defisit, dan penerimaan pajak Indonesia menurut APBN KiTa
+        Kementerian Keuangan. Semua angka dalam triliun Rupiah (Rp T); target menurut
+        APBN 2026 (UU No. 17 Tahun 2025).
+      </p>
+      <p class="snapshot-note">
+        <strong>Edisi publik Arsip Tahunan.</strong> Data dibekukan per
+        <strong>Rabu, 25 November 2026</strong> — halaman ini tidak diperbarui otomatis;
+        angka terbaru selalu ada di publikasi APBN KiTa Kemenkeu.
+      </p>
+
+      <!-- Postur APBN -->
+      <section aria-label="Postur APBN">
+        <div class="hero-grid">
+          <div class="card">
+            <p class="hero-label">Pendapatan Negara</p>
+            <p class="hero-value">Rp2.618 T</p>
+            <div class="hero-meta">
+              <span class="pct-target">83,0% dari target</span>
+              <span class="yoy">+23,9% yoy</span>
+            </div>
+            <div class="bar" role="img" aria-label="Capaian 83,0% dari target"><div style="width:83%"></div></div>
+            <p class="hero-target">Target APBN 2026: Rp3.153,6 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">Belanja Negara</p>
+            <p class="hero-value">Rp2.997,2 T</p>
+            <div class="hero-meta">
+              <span class="pct-target">78,0% dari target</span>
+              <span class="yoy">+15,6% yoy</span>
+            </div>
+            <div class="bar" role="img" aria-label="Capaian 78,0% dari target"><div style="width:78%"></div></div>
+            <p class="hero-target">Target APBN 2026: Rp3.842,7 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">Defisit APBN</p>
+            <p class="hero-value">Rp379,3 T</p>
+            <div class="hero-meta">
+              <span class="pct-target">55,0% dari target</span>
+            </div>
+            <div class="bar" role="img" aria-label="Capaian 55,0% dari target"><div style="width:55%"></div></div>
+            <p class="hero-target">Target APBN 2026: Rp689,1 T · 1,47% dari PDB (target 2,68%)</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">Pembiayaan Anggaran</p>
+            <p class="hero-value">Rp595,2 T</p>
+            <div class="hero-meta">
+              <span class="pct-target">86,4% dari target</span>
+            </div>
+            <div class="bar" role="img" aria-label="Capaian 86,4% dari target"><div style="width:86.4%"></div></div>
+            <p class="hero-target">Target APBN 2026: Rp689,1 T</p>
+          </div>
+        </div>
+
+        <div class="card strip">
+          <span>Keseimbangan primer: <strong>surplus Rp114,8 T</strong></span>
+          <span>Belanja pemerintah pusat: <strong>Rp2.343,6 T</strong></span>
+          <span>Transfer ke daerah: <strong>Rp653,6 T</strong> (94,3% dari pagu)</span>
+          <span>Penerimaan perpajakan: <strong>Rp2.064 T</strong> (76,6% dari target) <span class="yoy">+20,8% yoy</span></span>
+        </div>
+
+        <p class="meaning">
+          Pendapatan yang tumbuh lebih cepat dari belanja membuat defisit menyempit —
+          ruang fiskal negara membaik, kebutuhan utang baru untuk menutup defisit ikut mengecil.
+        </p>
+      </section>
+
+      <!-- Riwayat bulanan -->
+      <section aria-label="Riwayat realisasi bulanan">
+        <h2>Riwayat Realisasi 2026 (Kumulatif per Bulan)</h2>
+        <div class="card" style="margin-top:12px">
+          <div class="chart-scroll">
+            <svg id="history-chart" viewBox="0 0 720 308" width="100%" role="img"
+              aria-label="Chart batang pendapatan dan belanja kumulatif 2026 dengan garis defisit: Juni pendapatan Rp1.459,4 T belanja Rp1.656 T defisit Rp196,5 T; Agustus Rp2.055,6 T, Rp2.295,7 T, Rp240,1 T; September Rp2.341,5 T, Rp2.660,5 T, Rp319 T; Oktober Rp2.618 T, Rp2.997,2 T, Rp379,3 T.">
+              <line class="grid-line" x1="52" y1="278" x2="706" y2="278"/><text class="axis-label" x="44" y="282" text-anchor="end">0</text>
+              <line class="grid-line" x1="52" y1="213" x2="706" y2="213"/><text class="axis-label" x="44" y="217" text-anchor="end">800</text>
+              <line class="grid-line" x1="52" y1="148" x2="706" y2="148"/><text class="axis-label" x="44" y="152" text-anchor="end">1.600</text>
+              <line class="grid-line" x1="52" y1="83" x2="706" y2="83"/><text class="axis-label" x="44" y="87" text-anchor="end">2.400</text>
+              <line class="grid-line" x1="52" y1="18" x2="706" y2="18"/><text class="axis-label" x="44" y="22" text-anchor="end">3.200</text>
+              <rect class="bar-rev" x="89.75" y="159.42" width="40" height="118.58" rx="3"/><rect class="bar-spend" x="137.75" y="143.45" width="40" height="134.55" rx="3"/><text class="axis-label" x="133.75" y="300" text-anchor="middle" font-size="12">Jun 26</text>
+              <rect class="bar-rev" x="253.25" y="110.98" width="40" height="167.02" rx="3"/><rect class="bar-spend" x="301.25" y="91.47" width="40" height="186.53" rx="3"/><text class="axis-label" x="297.25" y="300" text-anchor="middle" font-size="12">Agu 26</text>
+              <rect class="bar-rev" x="416.75" y="87.75" width="40" height="190.25" rx="3"/><rect class="bar-spend" x="464.75" y="61.83" width="40" height="216.17" rx="3"/><text class="axis-label" x="460.75" y="300" text-anchor="middle" font-size="12">Sep 26</text>
+              <rect class="bar-rev" x="580.25" y="65.29" width="40" height="212.71" rx="3"/><rect class="bar-spend" x="628.25" y="34.48" width="40" height="243.52" rx="3"/><text class="axis-label" x="624.25" y="300" text-anchor="middle" font-size="12">Okt 26</text>
+              <polyline class="def-line" points="133.75,262.03 297.25,258.49 460.75,252.08 624.25,247.18"/>
+              <circle class="def-dot" cx="133.75" cy="262.03" r="3.5"/><text class="def-label" x="133.75" y="253.03" text-anchor="middle">196,5</text>
+              <circle class="def-dot" cx="297.25" cy="258.49" r="3.5"/><text class="def-label" x="297.25" y="249.49" text-anchor="middle">240,1</text>
+              <circle class="def-dot" cx="460.75" cy="252.08" r="3.5"/><text class="def-label" x="460.75" y="243.08" text-anchor="middle">319</text>
+              <circle class="def-dot" cx="624.25" cy="247.18" r="3.5"/><text class="def-label" x="624.25" y="238.18" text-anchor="middle">379,3</text>
+            </svg>
+          </div>
+          <div class="legend">
+            <span class="l-rev">Pendapatan</span>
+            <span class="l-spend">Belanja</span>
+            <span class="l-def">Defisit (garis, nilai berlabel)</span>
+          </div>
+          <p class="chart-note">
+            Batang: pendapatan (hijau) dan belanja (biru) kumulatif sejak Januari 2026;
+            garis merah: defisit kumulatif. Hanya bulan yang angkanya terbit di APBN KiTa
+            yang ditampilkan — realisasi Juli 2026 tidak diterbitkan sebagai edisi bulanan
+            tersendiri, jadi tidak ditampilkan.
+          </p>
+        </div>
+      </section>
+
+      <!-- Penerimaan pajak per jenis -->
+      <section aria-label="Penerimaan pajak per jenis">
+        <h2>Penerimaan Pajak per Jenis</h2>
+        <p class="meaning">
+          PPN yang tumbuh kencang menandakan konsumsi rumah tangga kuat; PPh mencerminkan
+          gaji dan laba perusahaan; PNBP yang melampaui target biasanya ditopang harga
+          komoditas dan dividen BUMN.
+        </p>
+
+        <div class="card" style="margin-top:12px">
+          <p style="margin:0 0 6px;font-size:14px;font-weight:700">Capaian terhadap target APBN 2026 (%)</p>
+          <div class="cap-row"><span class="cap-name">PNBP</span><span class="cap-track"><span class="cap-fill full" style="width:100%"></span><span class="cap-target-line" style="left:83.3%"></span></span><span class="cap-val">120,2%</span></div>
+          <div class="cap-row"><span class="cap-name">PPN &amp; PPnBM</span><span class="cap-track"><span class="cap-fill" style="width:66.4%"></span><span class="cap-target-line" style="left:83.3%"></span></span><span class="cap-val">79,7%</span></div>
+          <div class="cap-row"><span class="cap-name">Kepabeanan &amp; Cukai</span><span class="cap-track"><span class="cap-fill" style="width:66.3%"></span><span class="cap-target-line" style="left:83.3%"></span></span><span class="cap-val">79,5%</span></div>
+          <div class="cap-row"><span class="cap-name">PPh (migas + nonmigas)</span><span class="cap-track"><span class="cap-fill" style="width:64.9%"></span><span class="cap-target-line" style="left:83.3%"></span></span><span class="cap-val">77,9%</span></div>
+          <div class="cap-row"><span class="cap-name">PBB</span><span class="cap-track"><span class="cap-fill" style="width:65.4%"></span><span class="cap-target-line" style="left:83.3%"></span></span><span class="cap-val">78,5%</span></div>
+          <div class="cap-row"><span class="cap-name">Penerimaan Pajak (total)</span><span class="cap-track"><span class="cap-fill" style="width:63.5%"></span><span class="cap-target-line" style="left:83.3%"></span></span><span class="cap-val">76,2%</span></div>
+          <div class="cap-row"><span class="cap-name">Pajak Lainnya</span><span class="cap-track"><span class="cap-fill" style="width:4.7%"></span><span class="cap-target-line" style="left:83.3%"></span></span><span class="cap-val">5,6%</span></div>
+          <p class="chart-note">Skala batang sampai 120%; garis kuning menandai 100% target. Capaian dihitung dari realisasi ÷ target APBN 2026. Deposit Pajak tidak punya target tersendiri, jadi tidak ikut chart ini.</p>
+        </div>
+
+        <div class="tax-grid">
+          <div class="card">
+            <p class="hero-label">Penerimaan Pajak (total)</p>
+            <p class="tax-value">Rp1.796,8 T</p>
+            <div class="hero-meta"><span class="pct-target">76,2% dari target</span><span class="yoy">+23,2% yoy</span></div>
+            <div class="bar" role="img" aria-label="Capaian 76,2% dari target"><div style="width:76.2%"></div></div>
+            <p class="hero-target">Target: Rp2.357,7 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">PPh (migas + nonmigas)</p>
+            <p class="tax-value">Rp942,07 T</p>
+            <div class="hero-meta"><span class="pct-target">77,9% dari target</span></div>
+            <div class="bar" role="img" aria-label="Capaian 77,9% dari target"><div style="width:77.9%"></div></div>
+            <p class="hero-target">Target: Rp1.209,36 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">PPN &amp; PPnBM</p>
+            <p class="tax-value">Rp793,55 T</p>
+            <div class="hero-meta"><span class="pct-target">79,7% dari target</span><span class="yoy">+39,1% yoy</span></div>
+            <div class="bar" role="img" aria-label="Capaian 79,7% dari target"><div style="width:79.7%"></div></div>
+            <p class="hero-target">Target: Rp995,27 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">PBB</p>
+            <p class="tax-value">Rp20,52 T</p>
+            <div class="hero-meta"><span class="pct-target">78,5% dari target</span><span class="yoy neg">−3,7% yoy</span></div>
+            <div class="bar" role="img" aria-label="Capaian 78,5% dari target"><div style="width:78.5%"></div></div>
+            <p class="hero-target">Target: Rp26,13 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">Kepabeanan &amp; Cukai</p>
+            <p class="tax-value">Rp267,2 T</p>
+            <div class="hero-meta"><span class="pct-target">79,5% dari target</span><span class="yoy">+7,2% yoy</span></div>
+            <div class="bar" role="img" aria-label="Capaian 79,5% dari target"><div style="width:79.5%"></div></div>
+            <p class="hero-target">Target: Rp336 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">PNBP</p>
+            <p class="tax-value">Rp551,8 T</p>
+            <div class="hero-meta"><span class="pct-target">120,2% dari target</span><span class="yoy">+37,0% yoy</span></div>
+            <div class="bar" role="img" aria-label="Capaian 120,2% dari target"><div class="full" style="width:100%"></div></div>
+            <p class="hero-target">Target: Rp459,1 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">Pajak Lainnya</p>
+            <p class="tax-value">Rp7,1 T</p>
+            <div class="hero-meta"><span class="pct-target">5,6% dari target</span><span class="yoy neg">−9,0% yoy</span></div>
+            <div class="bar" role="img" aria-label="Capaian 5,6% dari target"><div style="width:5.6%"></div></div>
+            <p class="hero-target">Target: Rp126,93 T</p>
+          </div>
+          <div class="card">
+            <p class="hero-label">Deposit Pajak</p>
+            <p class="tax-value">Rp33,6 T</p>
+            <div class="hero-meta"><span class="yoy neg">−49,8% yoy</span></div>
+            <p class="hero-target">Tidak ada target tersendiri di APBN 2026 — pos setoran deposit wajib pajak.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sorotan + rasio pajak -->
+      <section aria-label="Sorotan dan rasio pajak">
+        <div class="duo">
+          <div class="card">
+            <h2>Sorotan Capaian</h2>
+            <p class="hl-line"><span class="tag good">Tertinggi:</span> PNBP — 120,2% dari target</p>
+            <p class="hl-line"><span class="tag low">Terendah:</span> Pajak Lainnya — 5,6% dari target</p>
+            <p class="hl-line" style="color:var(--dim)">
+              Pos yang sudah menembus 100% sebelum tahun berakhir memberi bantalan bagi pos
+              yang masih tertinggal, sehingga target pendapatan total tetap realistis dikejar.
+            </p>
+          </div>
+          <div class="card">
+            <h2>Rasio Pajak (Tax Ratio)</h2>
+            <p class="ratio-sub" style="margin-top:6px">Periode: Januari–September 2026</p>
+            <div class="ratio-grid">
+              <div>
+                <p class="hero-label">Arti sempit</p>
+                <p class="ratio-value">9,49%</p>
+                <p class="ratio-sub">Penerimaan perpajakan ÷ PDB</p>
+              </div>
+              <div>
+                <p class="hero-label">Arti luas</p>
+                <p class="ratio-value">10,63%</p>
+                <p class="ratio-sub">Dengan PNBP sumber daya alam · tahun lalu 9,50%</p>
+              </div>
+            </div>
+            <p class="hl-line">Estimasi pemerintah untuk setahun penuh 2026: <strong>10,1%</strong></p>
+            <p class="meaning">
+              Tax ratio menunjukkan seberapa besar porsi ekonomi yang berhasil dipungut negara
+              sebagai pajak — makin tinggi, makin besar kemampuan negara membiayai pembangunan
+              tanpa menambah utang.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sumber -->
+      <section aria-label="Sumber data">
+        <div class="card">
+          <h2>Sumber Data</h2>
+          <p class="src-note">
+            Konferensi pers APBN KiTa edisi November 2026 (13 Nov 2026): realisasi s.d.
+            31 Oktober 2026 dari siaran pers DJPb Kemenkeu, rincian jenis pajak dari DDTC News,
+            dan pembiayaan Rp595,2 T dari target Rp689,1 T; target APBN 2026 mengikuti
+            UU No. 17/2025 dengan rincian Perpres 118/2025 (perpajakan Rp2.693,71 T; PPh
+            Rp1.209,36 T, PPN &amp; PPnBM Rp995,27 T, PBB Rp26,13 T, pajak lainnya Rp126,93 T).
+            Transfer ke daerah 94,3% dihitung terhadap target awal Rp693 T (pagu kemudian
+            direvisi menjadi Rp726,2 T, sekitar 90%). Tax ratio Januari–September 2026
+            (sempit 9,49%, luas 10,63%, luas tahun lalu 9,50%) berdasarkan data Kemenkeu
+            &amp; BPS, dengan estimasi pemerintah untuk 2026 penuh sebesar 10,1%; riwayat
+            Juni dari siaran pers DJA Semester I 2026, Agustus dan September dari siaran
+            pers DJPb Kemenkeu.
+          </p>
+          <ul class="sources">
+            <li><a href="https://djpb.kemenkeu.go.id/kppn/lubuklinggau/id/data-publikasi/berita-terbaru/3852-hingga-akhir-oktober,-kinerja-apbn-tetap-solid-keseimbangan-primer-positif-dan-defisit-terkendali.html" target="_blank" rel="noreferrer">DJPb Kemenkeu — Kinerja APBN hingga akhir Oktober 2026</a></li>
+            <li><a href="https://news.ddtc.co.id/berita/nasional/1824080/realisasi-penerimaan-pajak-capai-rp17968-triliun-tumbuh-232-persen" target="_blank" rel="noreferrer">DDTC News — Realisasi Penerimaan Pajak Rp1.796,8 T, tumbuh 23,2%</a></li>
+            <li><a href="https://www.pajakonline.com/tax-ratio-indonesia-9-49-persen-hingga-september-2026-pemerintah-hadapi-tantangan-perluasan-basis-pajak/" target="_blank" rel="noreferrer">PajakOnline — Tax Ratio Indonesia 9,49% hingga September 2026</a></li>
+            <li><a href="https://www.topik.id/defisit-apbn-tembus-rp3793-triliun-per-oktober-2026-ini-penjelasan-menkeu" target="_blank" rel="noreferrer">Topik.id — Defisit APBN Rp379,3 T per Oktober 2026</a></li>
+            <li><a href="https://djpb.kemenkeu.go.id/kppn/lubuklinggau/id/data-publikasi/berita-terbaru/3827-apbn-kredibel,-kinerja-fiskal-tetap-terjaga-hingga-september-2026.html" target="_blank" rel="noreferrer">DJPb Kemenkeu — APBN hingga September 2026</a></li>
+            <li><a href="https://djpb.kemenkeu.go.id/kppn/penerimaan/id/data-publikasi/berita-terbaru/3051-kinerja-apbn-hingga-agustus-2026-tetap-on-track,-kredibilitas-fiskal-terus-dijaga.html" target="_blank" rel="noreferrer">DJPb Kemenkeu — Kinerja APBN hingga Agustus 2026</a></li>
+            <li><a href="https://djpb.kemenkeu.go.id/kppn/pematangsiantar/id/data-publikasi/189-berita/3084-apbn-kita-semester-i-2026-tetap-kuat-menjaga-stabilitas-fiskal-dan-mendukung-pertumbuhan-ekonomi-3.html" target="_blank" rel="noreferrer">DJPb Kemenkeu — APBN KiTa Semester I 2026</a></li>
+            <li><a href="https://www.mib.group/news/target-penerimaan-pajak-meningkat--didukung-oleh-peningkatan-target-pajak-ini" target="_blank" rel="noreferrer">MIB — Target penerimaan pajak APBN 2026 (Perpres 118/2025)</a></li>
+          </ul>
+          <p class="src-note">
+            Angka berasal dari publikasi resmi Kementerian Keuangan (APBN KiTa) dan
+            Direktorat Jenderal Pajak; target menurut UU APBN 2026. Angka yang belum
+            diterbitkan sumber resmi tidak ditampilkan dan tidak pernah dikarang.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Bagian dari <a href="https://arsiptahunan.github.io/">Arsip Tahunan</a> —
+          kumpulan halaman data publik Indonesia. Halaman ini rencananya juga diterbitkan
+          di arsiptahunan.github.io.
+        </p>
+        <p class="disc">Halaman ini hanya menyajikan data — bukan saran investasi atau kebijakan.</p>
+      </footer>
+    </main>
+  </body>
+</html>
